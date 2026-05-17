@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  googleSubject           String?                  @unique
+  passwordHash            String
+  nickname                String
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  sessions                Session[]
+  productivityProfile     ProductivityProfile?
+  settings                UserSettings?
+  tasks                   Task[]
+  categories              Category[]
+  focusSessionLogs        FocusSessionLog[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+}
+
+model Session {
+  id               String    @id @default(cuid())
+  userId           String
+  sessionTokenHash String    @unique
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  lastSeenAt       DateTime  @default(now())
+  revokedAt        DateTime?
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ProductivityProfile {
+  userId                  String   @id
+  workMode                String   @default("mixed")
+  dailyMainTasksTarget    Int      @default(3)
+  preferredFocusMinutes   Int      @default(25)
+  peakTime                String   @default("day")
+  planningStyle           String   @default("balanced")
+  onboardingCompletedAt   DateTime?
+  updatedAt               DateTime      @updatedAt
+  user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserSettings {
+  userId           String   @id
+  theme            String   @default("light")
+  timezone         String?
+  locale           String   @default("ru-RU")
+  dashboardWidgets Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id               String            @id @default(cuid())
+  userId           String
+  title            String
+  description      String            @default("")
+  dueDate          DateTime?         @db.Date
+  dueTime          String?           @db.VarChar(5)
+  priority         String
+  status           String
+  categoryId       String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  completedAt      DateTime?
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subtasks         Subtask[]
+  focusSessionLogs FocusSessionLog[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  taskId    String
+  title     String
+  completed Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model FocusSessionLog {
+  id              String             @id @default(cuid())
+  userId          String
+  taskId          String?
+  durationMinutes Int
+  startedAt       DateTime
+  completedAt     DateTime?
+  status          String
+  createdAt       DateTime           @default(now())
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task            Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([taskId])
+  @@index([startedAt])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

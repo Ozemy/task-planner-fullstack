@@ -1,0 +1,40 @@
+{
+  "name": "task-planner",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:web": "vite",
+    "dev:server": "npm --prefix server run dev",
+    "dev:all": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
+    "build": "tsc -b && vite build",
+    "build:web": "tsc -b && vite build",
+    "build:server": "npm --prefix server run build",
+    "lint": "eslint .",
+    "typecheck": "tsc -b --pretty false",
+    "typecheck:server": "npm --prefix server run typecheck",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:migrate": "npm --prefix server run prisma:migrate",
+    "db:generate": "npm --prefix server run prisma:generate",
+    "setup:local": "npm install && npm --prefix server install",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "@types/react": "^19.1.3",
+    "@types/react-dom": "^19.1.3",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.27.0",
+    "globals": "^16.1.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.32.1",
+    "vite": "^6.3.5"
+  }
+}
