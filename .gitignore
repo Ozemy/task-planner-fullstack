@@ -3,6 +3,8 @@ dist/
 .vite/
 .env
 .env.local
+.env.production
+.env.production.local
 *.log
 .DS_Store
 *.zip
@@ -10,3 +12,5 @@ server/node_modules/
 server/dist/
 server/.env
 server/.env.local
+server/.env.production
+server/.env.production.local

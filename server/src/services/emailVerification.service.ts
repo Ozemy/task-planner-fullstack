@@ -29,7 +29,7 @@ export async function requestEmailVerification(userId: string) {
     },
   });
 
-  const verificationUrl = `${env.clientOrigin}/?verifyEmail=${encodeURIComponent(token)}`;
+  const verificationUrl = `${env.appOrigin}/?verifyEmail=${encodeURIComponent(token)}`;
 
   if (!env.smtpHost) {
     if (env.nodeEnv === 'development') {

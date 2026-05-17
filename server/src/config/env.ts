@@ -46,10 +46,13 @@ if (sessionSecret.length < 32) {
   throw new Error('SESSION_SECRET must be at least 32 characters long.');
 }
 
+const clientOrigin = readOptional('CLIENT_ORIGIN', 'http://127.0.0.1:5173');
+
 export const env = {
   databaseUrl: readRequired('DATABASE_URL'),
   sessionSecret,
-  clientOrigin: readOptional('CLIENT_ORIGIN', 'http://127.0.0.1:5173'),
+  clientOrigin,
+  appOrigin: readOptional('APP_ORIGIN', clientOrigin),
   nodeEnv:
     process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
       ? process.env.NODE_ENV

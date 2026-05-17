@@ -107,7 +107,7 @@ Backend health:
 - `scripts/check-health.bat` — проверяет backend health endpoint.
 - `scripts/stop-all.bat` — останавливает Docker PostgreSQL и напоминает закрыть окна backend/frontend вручную.
 
-Если закрыть окна backend или frontend, соответствующая часть приложения перестанет работать. Если Docker Desktop закрыт, база данных не запустится.
+Если закрыть окна backend или frontend, соответствующая часть приложения перестанет работать. Если Docker Desktop закрыт, база данных не запустится. Обычный запуск одной копии проекта не меняется; если вы запускаете несколько копий на одной машине, сначала остановите старую через `scripts/stop-all.bat` или `npm run db:down`, чтобы освободить используемые Docker-ресурсы и порт PostgreSQL.
 
 ## Guest Mode vs Account Mode
 
@@ -198,6 +198,10 @@ server/
     types/
     utils/
 scripts/
+nginx/
+Dockerfile.web
+docker-compose.prod.yml
+.env.production.example
 docker-compose.yml
 ```
 
@@ -251,6 +255,116 @@ npm run build:server
 7. Корректные значения `CLIENT_ORIGIN`, `DATABASE_URL` и `SESSION_SECRET`.
 
 Практичный production-вариант для самостоятельного размещения: VPS + Docker + PostgreSQL + Node backend + отдельно опубликованный frontend build.
+
+## Deploy to VPS
+
+### 1. Выберите VPS
+
+Для небольшого production-деплоя подойдут:
+
+- Ubuntu `22.04` или `24.04`;
+- `1-2 vCPU`;
+- минимум `2 GB RAM`;
+- `20+ GB SSD`.
+
+### 2. Подключитесь по SSH
+
+```bash
+ssh user@SERVER_IP
+```
+
+### 3. Установите Docker и Docker Compose
+
+Установите Docker Engine и Docker Compose plugin по инструкции вашего хостинга или официальной документации Docker, затем проверьте:
+
+```bash
+docker --version
+docker compose version
+```
+
+### 4. Склонируйте репозиторий
+
+```bash
+git clone https://github.com/Ozemy/task-planner-fullstack.git
+cd task-planner-fullstack
+```
+
+### 5. Создайте production env
+
+```bash
+cp .env.production.example .env.production
+```
+
+### 6. Заполните production значения
+
+Минимум замените:
+
+- `POSTGRES_PASSWORD`
+- `SESSION_SECRET`
+- `CLIENT_ORIGIN`
+- `APP_ORIGIN`
+- `DATABASE_URL`
+
+Примерно так:
+
+```env
+CLIENT_ORIGIN=https://your-domain.ru
+APP_ORIGIN=https://your-domain.ru
+DATABASE_URL=postgresql://task_planner_user:strong_password@postgres:5432/task_planner
+```
+
+### 7. Запустите production stack
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+```
+
+### 8. Примените production migrations
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production exec api npm run prisma:migrate:deploy
+```
+
+### 9. Проверьте первый запуск
+
+```bash
+curl http://SERVER_IP/api/health
+curl http://SERVER_IP
+```
+
+Для первичного smoke-test сайт можно открыть по IP через HTTP. Но в `NODE_ENV=production` auth cookie помечаются как `secure`, поэтому полноценный `Account Mode` нужно проверять уже через HTTPS.
+
+### 10. Подключите домен
+
+Создайте `A`-запись домена на IP вашего VPS.
+
+### 11. Включите HTTPS
+
+Контейнер `web` уже отдаёт frontend и проксирует `/api` на backend внутри Docker-сети. Для настоящего production-деплоя добавьте HTTPS на уровне VPS:
+
+1. Установите host-level `nginx` и `certbot`.
+2. Настройте reverse proxy на контейнерный web-сервис.
+3. Выполните:
+
+```bash
+sudo certbot --nginx
+```
+
+На первом этапе допустимо открыть контейнерный web-сервис напрямую на `80` для проверки по IP. Когда включаете host-level Nginx/Certbot, перенесите внутренний web upstream за reverse proxy, например на localhost-порт, чтобы host Nginx мог занять `80/443`.
+
+### VPS security checklist
+
+- Используйте сильный `SESSION_SECRET`.
+- Используйте сильный `POSTGRES_PASSWORD`.
+- Не коммитьте `.env.production`.
+- Не открывайте прямой доступ к PostgreSQL снаружи.
+- Оставьте наружу только SSH, `80` и `443`.
+- Обязательно включите HTTPS.
+- Настройте backup PostgreSQL.
+- Следите за обновлениями сервера.
+- После смены домена перепроверьте CORS и `CLIENT_ORIGIN`.
+
+Короткая отдельная памятка также лежит в [`scripts/deploy-checklist.md`](scripts/deploy-checklist.md).
 
 ## Security Notes
 

@@ -1,0 +1,12 @@
+node_modules
+dist
+server/node_modules
+server/dist
+.git
+.vite
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.log
+*.zip
