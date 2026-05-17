@@ -214,6 +214,7 @@ docker-compose.yml
 - `CLIENT_ORIGIN`
 - `NODE_ENV`
 - `PORT`
+- `COOKIE_SECURE` — `auto` by default; use `false` only for a temporary HTTP/IP smoke-test
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USER`
@@ -332,7 +333,9 @@ curl http://SERVER_IP/api/health
 curl http://SERVER_IP
 ```
 
-Для первичного smoke-test сайт можно открыть по IP через HTTP. Но в `NODE_ENV=production` auth cookie помечаются как `secure`, поэтому полноценный `Account Mode` нужно проверять уже через HTTPS.
+Для первичного smoke-test сайт можно открыть по IP через HTTP. `Guest Mode` при этом работает полностью локально через `localStorage` и не зависит от backend-авторизации. По умолчанию в `NODE_ENV=production` auth cookie помечаются как `secure`, поэтому полноценный `Account Mode` нужно проверять уже через HTTPS.
+
+Если вам нужно временно проверить регистрацию и вход именно по `http://SERVER_IP`, можно выставить `COOKIE_SECURE=false` в `.env.production`. Это допустимо только для короткого smoke-test. Для настоящего production-деплоя с доменом и HTTPS оставьте `COOKIE_SECURE=auto` или задайте `COOKIE_SECURE=true`.
 
 ### 10. Подключите домен
 
@@ -357,6 +360,7 @@ sudo certbot --nginx
 - Используйте сильный `SESSION_SECRET`.
 - Используйте сильный `POSTGRES_PASSWORD`.
 - Не коммитьте `.env.production`.
+- Для реального production используйте HTTPS и `COOKIE_SECURE=auto` или `COOKIE_SECURE=true`.
 - Не открывайте прямой доступ к PostgreSQL снаружи.
 - Оставьте наружу только SSH, `80` и `443`.
 - Обязательно включите HTTPS.

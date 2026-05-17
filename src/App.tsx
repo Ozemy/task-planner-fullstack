@@ -33,7 +33,10 @@ import { isTaskDueToday } from './utils/date';
 
 export function App() {
   const auth = useAuth();
-  const planner = usePlanner(auth.isAuthenticated);
+  const planner = usePlanner({
+    isAuthenticated: auth.isAuthenticated,
+    onUnauthorized: auth.handleUnauthorized,
+  });
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [selectedDateForNewTask, setSelectedDateForNewTask] = useState('');

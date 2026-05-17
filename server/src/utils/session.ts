@@ -33,7 +33,7 @@ function getSessionCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     sameSite: 'lax',
-    secure: env.nodeEnv === 'production',
+    secure: env.cookieSecure,
     path: '/',
     maxAge: env.sessionMaxAgeDays * 24 * 60 * 60 * 1000,
   };

@@ -29,7 +29,7 @@ export async function apiRequest<T>(
   } catch {
     throw new ApiError(
       0,
-      'Сервер авторизации не запущен. Запустите npm run dev:server.',
+      'Сервер аккаунта недоступен, но локальный режим продолжает работать.',
       'NETWORK_ERROR',
     );
   }
@@ -58,7 +58,7 @@ function getErrorMessage(status: number, code?: string, fallback?: string): stri
     case 'DATABASE_UNAVAILABLE':
       return 'База данных недоступна. Запустите npm run db:up и npm run db:migrate.';
     case 'UNAUTHORIZED':
-      return 'Сессия истекла. Войдите снова.';
+      return 'Войдите в аккаунт, чтобы синхронизировать задачи.';
     case 'EMAIL_EXISTS':
       return 'Пользователь с таким email уже существует.';
     case 'INVALID_CREDENTIALS':

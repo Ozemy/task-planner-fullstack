@@ -14,6 +14,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string;
+  handleUnauthorized: () => void;
   clearError: () => void;
   refreshMe: () => Promise<void>;
   requestEmailVerification: () => Promise<{
@@ -74,6 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function handleUnauthorized(): void {
+    setSession(null);
+    setError('');
+  }
+
   useEffect(() => {
     let active = true;
 
@@ -87,7 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (loadError) {
         if (active) {
           setSession(null);
-          if (!(loadError instanceof ApiError && loadError.status === 401)) {
+          if (loadError instanceof ApiError && loadError.status === 401) {
+            setError('');
+          } else {
             setError(
               loadError instanceof ApiError
                 ? loadError.message
@@ -115,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(session),
       isLoading,
       error,
+      handleUnauthorized,
       clearError() {
         setError('');
       },

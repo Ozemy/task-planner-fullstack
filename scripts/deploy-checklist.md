@@ -6,6 +6,7 @@
 - [ ] Use a long random `SESSION_SECRET`.
 - [ ] Keep `.env.production` outside git.
 - [ ] Verify `CLIENT_ORIGIN`, `APP_ORIGIN`, and `DATABASE_URL`.
+- [ ] Keep `COOKIE_SECURE=auto` or `true` for real HTTPS production; use `false` only for a temporary HTTP/IP smoke-test.
 - [ ] Decide how HTTPS will be terminated in production.
 
 ## First deploy

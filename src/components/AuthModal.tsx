@@ -57,7 +57,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const visibleError = error || auth.error;
   const showSetupHint =
-    visibleError.includes('Сервер авторизации') || visibleError.includes('База данных');
+    visibleError.includes('Сервер аккаунта') || visibleError.includes('База данных');
 
   return (
     <div className="modal-backdrop" role="presentation">

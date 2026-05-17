@@ -43,7 +43,13 @@ import { createDemoState } from '../utils/demoData';
 
 const CATEGORY_COLORS = ['#1f6f78', '#d26a5c', '#7b5ea7', '#57825d', '#d39a35', '#4d6fa9'];
 
-export function usePlanner(isAuthenticated: boolean) {
+export function usePlanner({
+  isAuthenticated,
+  onUnauthorized,
+}: {
+  isAuthenticated: boolean;
+  onUnauthorized: () => void;
+}) {
   const [initialLoad] = useState(loadInitialPlannerState);
   const [notice, setNotice] = useState<Notice | null>(initialLoad.notice);
   const [state, setState] = useState<PlannerState>(initialLoad.state);
@@ -141,6 +147,16 @@ export function usePlanner(isAuthenticated: boolean) {
         categories: remote.categories,
       }));
     } catch (error) {
+      if (isUnauthorizedApiError(error)) {
+        onUnauthorized();
+        setSyncError('');
+        setNotice({
+          kind: 'info',
+          text: 'Сессия не подтверждена. Локальный режим продолжает работать.',
+        });
+        return;
+      }
+
       const message = getSyncErrorMessage(error);
       setSyncError(message);
       setNotice({
@@ -445,6 +461,16 @@ export function usePlanner(isAuthenticated: boolean) {
       setSyncError('');
       await mutation();
     } catch (error) {
+      if (isUnauthorizedApiError(error)) {
+        onUnauthorized();
+        setSyncError('');
+        setNotice({
+          kind: 'info',
+          text: 'Сессия истекла. Локальный режим продолжает работать.',
+        });
+        return;
+      }
+
       const message = getSyncErrorMessage(error);
       setSyncError(message);
       setNotice({
@@ -516,4 +542,8 @@ function getSyncErrorMessage(error: unknown): string {
   }
 
   return 'Не удалось синхронизировать данные с аккаунтом.';
+}
+
+function isUnauthorizedApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 401;
 }

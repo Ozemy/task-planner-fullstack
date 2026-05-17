@@ -41,22 +41,47 @@ function readOptionalPort(name: string, fallback: number): number {
   return value;
 }
 
+type NodeEnv = 'development' | 'production' | 'test';
+
+function readNodeEnv(): NodeEnv {
+  return process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
+    ? process.env.NODE_ENV
+    : 'development';
+}
+
+function readCookieSecure(nodeEnv: NodeEnv): boolean {
+  const rawValue = process.env.COOKIE_SECURE?.trim().toLowerCase();
+
+  if (!rawValue || rawValue === 'auto') {
+    return nodeEnv === 'production';
+  }
+
+  if (rawValue === 'true') {
+    return true;
+  }
+
+  if (rawValue === 'false') {
+    return false;
+  }
+
+  throw new Error('COOKIE_SECURE must be "auto", "true", or "false".');
+}
+
 const sessionSecret = readRequired('SESSION_SECRET');
 if (sessionSecret.length < 32) {
   throw new Error('SESSION_SECRET must be at least 32 characters long.');
 }
 
 const clientOrigin = readOptional('CLIENT_ORIGIN', 'http://127.0.0.1:5173');
+const nodeEnv = readNodeEnv();
 
 export const env = {
   databaseUrl: readRequired('DATABASE_URL'),
   sessionSecret,
   clientOrigin,
   appOrigin: readOptional('APP_ORIGIN', clientOrigin),
-  nodeEnv:
-    process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
-      ? process.env.NODE_ENV
-      : 'development',
+  nodeEnv,
+  cookieSecure: readCookieSecure(nodeEnv),
   port: readPort(),
   sessionMaxAgeDays: 30,
   smtpHost: readNullable('SMTP_HOST'),
